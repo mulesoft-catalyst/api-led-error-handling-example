@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+    <cloudhub:token-config name="Cloudhub__Inhered_Token_Authentication" doc:name="Cloudhub: Inhered Token Authentication"/>
+    <apikit:mapping-exception-strategy name="api-kit-global-exception-strategy">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException"/>
+            <apikit:exception value="com.mulesoft.services.HttpNotFoundException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "RESOURCE_NOT_FOUND",
+	message: "Resource not found",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "METHOD_NOT_ALLOWED",
+	message: "Method not allowed",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "UNSUPPORTED_MEDIA_TYPE",
+	message: "Unsupported media type",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "NOT_ACCEPTABLE",
+	message: "Not acceptable",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "BAD_REQUEST",
+	message: "Bad request",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="401">
+            <apikit:exception value="org.springframework.security.authentication.BadCredentialsException"/>
+            <apikit:exception value="org.mule.api.security.UnauthorisedException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionMessage" value="#[exception.?message]" doc:name="Set errorMessage"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "UNAUTHORIZED",
+	message: "Unauthorized",
+	description: flowVars.exceptionMessage,
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="502">
+            <apikit:exception value="java.net.ConnectException"/>
+            <apikit:exception value="java.net.SocketException"/>
+            <apikit:exception value="org.mule.module.ws.consumer.SoapFaultException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionClass" value="#[exception.class.toString()]" doc:name="Set exceptionClass"/>
+            <set-variable variableName="exceptionMessage" value="#['Bad Gateway: ' + exception.?message]" doc:name="Set errorMessage"/>
+            <flow-ref name="log-system-error" doc:name="log-system-error"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "BAD_GATEWAY",
+	message: "Bad Gateway",
+	description: "Upstream service failed",
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="504">
+            <apikit:exception value="java.util.concurrent.TimeoutException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionClass" value="#[exception.class.toString()]" doc:name="Set exceptionClass"/>
+            <set-variable variableName="exceptionMessage" value="#['Gateway timeout: ' + exception.?message]" doc:name="Set errorMessage"/>
+            <flow-ref name="log-system-error" doc:name="log-system-error"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "GATEWAY_TIMEOUT",
+	message: "Gateway Timeout",
+	description: "Timeout trying to connect to upstream service",
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+        <apikit:mapping statusCode="500">
+            <apikit:exception value="java.lang.Exception"/>
+            <apikit:exception value="com.mulesoft.services.HttpErrorException"/>
+            <apikit:exception value="org.mule.module.http.internal.request.ResponseValidatorException"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Set Content-Type"/>
+            <set-variable variableName="exceptionClass" value="#[exception.class.toString()]" doc:name="Set exceptionClass"/>
+            <set-variable variableName="exceptionMessage" value="#['Internal Server Error:' + exception.?message]" doc:name="Set errorMessage"/>
+            <flow-ref name="log-system-error" doc:name="log-system-error"/>
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	code: "INTERNAL_SERVER_ERROR",
+	message: "Internal Server Error",
+	description: "Internal Server error",
+	transactionId: flowVars.transactionId
+}]]></dw:set-payload>
+            </dw:transform-message>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+    <sub-flow name="log-system-error">
+        <set-variable variableName="exceptionChain" value="#[[exception.?toString(),exception.?cause.?toString(),exception.?cause.?cause.?toString(),exception.?cause.?cause.?cause.?toString()]]" doc:name="Set exception array"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-variable variableName="errorDetailedMessage"><![CDATA[%dw 1.0
+%output application/java
+---
+(flowVars.exceptionChain filter $ != null) joinBy "\n- "]]></dw:set-variable>
+        </dw:transform-message>
+        <logger message="transactionId: #[flowVars.transactionId] - System error - class: #[flowVars.exceptionClass] - message: #[flowVars.exceptionMessage] - details: #[flowVars.errorDetailedMessage]" level="ERROR" doc:name="Log Error"/>
+        <remove-variable variableName="exceptionChain" doc:name="Remove exception array"/>
+        <flow-ref name="send-system-error-cloudhub-notification" doc:name="send-system-error-cloudhub-notification"/>
+    </sub-flow>
+    <flow name="send-system-error-cloudhub-notification">
+        <cloudhub:create-notification config-ref="Cloudhub__Inhered_Token_Authentication" domain="system-customer-api.services.mulesoft.com" message="TransactionId: #[flowVars.transactionId] - System error - Class: #[flowVars.exceptionClass] - Message: #[flowVars.exceptionMessage]" priority="ERROR" doc:name="Cloudhub">
+            <cloudhub:custom-properties ref="#[{&quot;transactionId&quot;: flowVars.transactionId, &quot;exceptionClass&quot;: flowVars.exceptionClass, &quot;errorMessage&quot;: flowVars.exceptionMessage, &quot;errorDetailedMessage&quot;: flowVars.errorDetailedMessage}]"/>
+        </cloudhub:create-notification>
+        <logger message="transactionId: #[flowVars.transactionId] - System error - Notification sent to Cloudhub" level="INFO" doc:name="Logger"/>
+        <choice-exception-strategy doc:name="Choice Exception Strategy">
+            <catch-exception-strategy when="exception.causedBy(java.lang.NullPointerException)" logException="false" doc:name="Catch Exception Strategy">
+                <logger message="transactionId: #[flowVars.transactionId] - System error - Error sending notification to Cloudhub" level="ERROR" doc:name="Log Error"/>
+            </catch-exception-strategy>
+        </choice-exception-strategy>
+    </flow>
+    <sub-flow name="validate-http-response">
+        <choice doc:name="Choice">
+            <when expression="#[message.inboundProperties['http.status'] == 404]">
+                <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload mimeType="application/json"/>
+                    <dw:set-variable variableName="errorMessage"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.description default "Not found"]]></dw:set-variable>
+                </dw:transform-message>
+                <validation:is-true message="#[flowVars.errorMessage]" exceptionClass="com.mulesoft.services.HttpNotFoundException" expression="#[false]" doc:name="Validation"/>
+            </when>
+            <when expression="#[message.inboundProperties['http.status'] &gt;= 400]">
+                <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload mimeType="application/json"/>
+                    <dw:set-variable variableName="errorMessage"><![CDATA[%dw 1.0
+%output application/java
+---
+"HTTP " ++ (inboundProperties.'http.status' default "") ++ ": " ++ (payload.description default "")]]></dw:set-variable>
+                </dw:transform-message>
+                <validation:is-true message="#[flowVars.errorMessage]" exceptionClass="com.mulesoft.services.HttpErrorException" expression="#[false]" doc:name="Validation"/>
+            </when>
+            <otherwise>
+                <logger message="HTTP Response: #[message.inboundProperties['http.status']]" level="TRACE" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+</mule>

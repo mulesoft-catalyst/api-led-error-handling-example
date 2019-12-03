@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:context="http://www.springframework.org/schema/context" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="httpListenerConfig" host="0.0.0.0" port="8082" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="apiConfig" raml="api.raml" consoleEnabled="false" doc:name="Router"/>
+    <context:property-placeholder location="api.properties" />
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" doc:name="HTTP Request Configuration"/>
+    <flow name="api-main">
+        <http:listener config-ref="httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <set-variable variableName="transactionId" value="#[(message.inboundProperties['x-transaction-id'] != null) ? message.inboundProperties['x-transaction-id'] : message.rootId.replace('-', '')]" doc:name="Set Transaction ID"/>
+        <logger message="transactionId: #[flowVars.transactionId] - Request - method: #[message.inboundProperties['http.method']] - URI: #[message.inboundProperties['http.request.uri']]" level="INFO" doc:name="Logger"/>
+        <apikit:router config-ref="apiConfig" doc:name="APIkit Router"/>
+        <response>
+            <logger message="transactionId: #[flowVars.transactionId] - Response - method: #[message.inboundProperties['http.method']] - URI: #[message.inboundProperties['http.request.uri']] - status: #[message.outboundProperties['http.status']]" level="INFO" doc:name="Logger"/>
+        </response>
+        <exception-strategy ref="api-kit-global-exception-strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="api-console">
+        <http:listener config-ref="httpListenerConfig" path="/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="apiConfig" doc:name="APIkit Console"/>
+    </flow>
+    <flow name="get:/customers/{customerId}:apiConfig">
+        <http:request config-ref="HTTP_Request_Configuration" path="/customers/{customerId}" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="customerId" value="#[flowVars.customerId]"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <validation:is-false message="Customer with this id was not found" exceptionClass="com.mulesoft.services.HttpNotFoundException" expression="#[payload.error == 'NOT_FOUND']" doc:name="Validate Not Found"/>
+        <validation:is-false message="Error from Upstream Service: #[payload.error]" exceptionClass="com.mulesoft.services.HttpErrorException" expression="#[payload.error != null]" doc:name="Validate Error"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	id: payload.id,
+	name: payload.name
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <exception-strategy ref="api-kit-global-exception-strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+</mule>

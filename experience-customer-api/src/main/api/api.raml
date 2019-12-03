@@ -1,0 +1,15 @@
+#%RAML 1.0
+title: Experience Customer API
+baseUri: http://localhost:8082/api
+protocols: HTTP
+mediaType: application/json
+
+/customers:
+  /{customerId}:
+    get:
+      responses: 
+        200:
+          body: 
+            example: !include examples/customer-response.json
+    
+  
